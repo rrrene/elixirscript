@@ -1,6 +1,8 @@
 import PostOffice from './lib/post_office';
+import { ProcessSystem } from './lib/processes/processes';
 
 self.post_office = self.post_office || new PostOffice();
+self.system = self.system || new ProcessSystem();
 
 export { default as Patterns } from './lib/patterns/patterns';
 export { default as BitString } from './lib/bit_string';
@@ -17,3 +19,4 @@ export { default as Keyword } from './lib/keyword';
 export { default as Base } from './lib/base';
 export { default as String } from './lib/string';
 export { default as Bitwise } from './lib/bitwise';
+export { default as Console } from './lib/console';

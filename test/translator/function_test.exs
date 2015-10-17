@@ -179,7 +179,7 @@ defmodule ElixirScript.Translator.Function.Test do
       Taco.test1()
     end
 
-    js_code = "JS.get_property_or_call_function(Taco, 'test1')"   
+    js_code = "JS.call_property(Taco, 'test1')"   
 
     assert_translation(ex_ast, js_code)
 

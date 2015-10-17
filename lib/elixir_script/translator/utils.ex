@@ -2,6 +2,7 @@ defmodule ElixirScript.Translator.Utils do
   @moduledoc false
   alias ESTree.Tools.Builder, as: JS
   alias ElixirScript.Translator
+  alias ElixirScript.Translator.Primitive
 
   def inflate_groups(body) do
     Enum.map(body, fn(x) -> 
@@ -17,17 +18,6 @@ defmodule ElixirScript.Translator.Utils do
       end
     end)
     |> List.flatten
-  end
-
-  def make_throw_statement(error_name, message) do
-    JS.throw_statement(
-      JS.new_expression(
-        JS.identifier(error_name),
-        [
-          JS.literal(message)
-        ]
-      )
-    )
   end
 
   def make_module_expression_tree([module], computed, env) do
@@ -55,29 +45,42 @@ defmodule ElixirScript.Translator.Utils do
     Translator.translate(module, env)
   end
 
+  defp make_gen_call(func, params) do
+    JS.yield_expression(
+      JS.call_expression(
+        JS.member_expression(
+          JS.identifier("JS"),
+          JS.identifier("run")
+        ),
+        [func, Primitive.make_list_no_translate(params)]
+      ),
+      true
+    )
+  end
+
   def make_call_expression_with_ast_params(module_name, function_name, params, env) do
-    JS.call_expression(
+    make_gen_call(
       make_member_expression(module_name, function_name, env),
       params
     )
   end
 
   def make_call_expression(module_name, function_name, params, env) do
-    JS.call_expression(
+    make_gen_call(
       make_member_expression(module_name, function_name, env),
       Enum.map(params, &Translator.translate(&1, env))
     )
   end
 
   def make_call_expression(function_name, params, env) when is_tuple(function_name) do
-    JS.call_expression(
+    make_gen_call(
       Translator.translate(function_name, env),
       Enum.map(params, &Translator.translate(&1, env))
     )
   end
 
   def make_call_expression(function_name, params, env) do
-    JS.call_expression(
+    make_gen_call(
       JS.identifier(function_name),
       Enum.map(params, &Translator.translate(&1, env))
     )
@@ -125,52 +128,8 @@ defmodule ElixirScript.Translator.Utils do
     end
   end
 
-  def build_function_name_ast(function_name) do
+  defp build_function_name_ast(function_name) do
     JS.identifier(function_name)
-  end
-
-  def make_array_accessor_call(name, index) do
-    make_member_expression(name, index, true)
-  end
-
-  def wrap_in_function_closure(body) do
-    the_body = case body do
-      b when is_list(b) ->
-        b
-      _ ->
-        [body]
-    end
-
-    JS.call_expression(
-      JS.member_expression(
-        JS.function_expression([],[],
-          JS.block_statement(the_body)
-        ),
-        JS.identifier("call")
-      ),
-      [JS.identifier("this")]
-    )
-  end
-
-  def make_match(pattern, expr, env) do
-    JS.call_expression(
-      make_member_expression("Kernel", "match__qmark__", env),
-      [
-        pattern,
-        expr
-      ]
-    )
-  end
-
-  def make_match(pattern, expr, guard, env) do
-    JS.call_expression(
-      make_member_expression("Kernel", "match__qmark__", env),
-      [
-        pattern,
-        expr,
-        guard
-      ]
-    )
   end
 
   def filter_name(:in) do

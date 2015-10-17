@@ -58,7 +58,7 @@ function codepoints(string){
 }
 
 
-function contains__qm__(string, contains){
+function contains__qmark__(string, contains){
   if(Array.isArray(contains)){
     return contains.some(function(s){
       return string.indexOf(s) > -1;
@@ -72,7 +72,7 @@ function duplicate(subject, n){
   return subject.repeat(n);
 }
 
-function ends_with__qm__(string, suffixes){
+function ends_with__qmark__(string, suffixes){
   if(Array.isArray(suffixes)){
     return suffixes.some(function(s){
       return string.endsWith(s);
@@ -107,7 +107,7 @@ function length(string){
 }
 
 
-function match__qm__(string, regex){
+function match__qmark__(string, regex){
   return string.match(regex) != null;
 }
 
@@ -146,7 +146,7 @@ function split(string){
 }
 
 
-function starts_with__qm__(string, prefixes){
+function starts_with__qmark__(string, prefixes){
   if(Array.isArray(prefixes)){
     return prefixes.some(function(s){
       return string.startsWith(s);
@@ -156,7 +156,7 @@ function starts_with__qm__(string, prefixes){
   return string.startsWith(prefixes);
 }
 
-function valid_character__qm__(codepoint){
+function valid_character__qmark__(codepoint){
   try{
     return String.fromCodePoint(codepoint) != null;
   }catch(e){
@@ -169,25 +169,25 @@ export default {
   at,
   capitalize,
   codepoints,
-  contains__qm__,
+  contains__qmark__,
   downcase,
   duplicate,
-  ends_with__qm__,
+  ends_with__qmark__,
   first,
   graphemes,
   last,
   length,
-  match__qm__,
+  match__qmark__,
   next_codepoint,
   next_grapheme,
   reverse,
   split,
-  starts_with__qm__,
+  starts_with__qmark__,
   to_atom,
   to_char_list,
   to_existing_atom,
   to_float,
   to_integer,
   upcase,
-  valid_character__qm__
+  valid_character__qmark__
 }

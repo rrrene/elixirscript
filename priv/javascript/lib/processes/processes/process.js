@@ -4,6 +4,8 @@
 import Mailbox from "./mailbox";
 import ProcessSystem from "./process_system";
 import States from "./states";
+import Patterns from "../../patterns/patterns";
+import JS from "../../js";
 
 function is_sleep(value){
   return Array.isArray(value) && value[0] === States.SLEEP;
@@ -83,13 +85,15 @@ class Process {
 
     for(let i = 0; i < messages.length; i++){
       try{
-        value = fun(messages[i]);
+        value = JS.to_function(fun)(messages[i]);
         if(value !== States.NOMATCH){
           this.mailbox.removeAt(i);
           break;
         }
       }catch(e){
-        this.exit(e);
+        if(!e instanceof Patterns.MatchError){
+          this.exit(e);
+        }
       }
     }
 

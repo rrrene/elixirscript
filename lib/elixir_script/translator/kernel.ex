@@ -101,7 +101,7 @@ defmodule ElixirScript.Translator.Kernel do
       JS.member_expression(
         JS.identifier(:self),
         JS.member_expression(
-          JS.identifier(:scheduler),
+          JS.identifier(:system),
           JS.identifier(:pid)
         )
       ),
@@ -114,7 +114,7 @@ defmodule ElixirScript.Translator.Kernel do
       JS.member_expression(
         JS.identifier(:self),
         JS.member_expression(
-          JS.identifier(:scheduler),
+          JS.identifier(:system),
           JS.identifier(:spawn)
         )
       ),
@@ -127,8 +127,8 @@ defmodule ElixirScript.Translator.Kernel do
       JS.member_expression(
         JS.identifier(:self),
         JS.member_expression(
-          JS.identifier(:scheduler),
-          JS.identifier(:spawn_from_module)
+          JS.identifier(:system),
+          JS.identifier(:spawn)
         )
       ),
       [Translator.translate(module, env), Translator.translate(fun, env), Translator.translate(args, env)]
@@ -140,7 +140,7 @@ defmodule ElixirScript.Translator.Kernel do
       JS.member_expression(
         JS.identifier(:self),
         JS.member_expression(
-          JS.identifier(:scheduler),
+          JS.identifier(:system),
           JS.identifier(:spawn_link)
         )
       ),
@@ -153,8 +153,8 @@ defmodule ElixirScript.Translator.Kernel do
       JS.member_expression(
         JS.identifier(:self),
         JS.member_expression(
-          JS.identifier(:scheduler),
-          JS.identifier(:spawn_link_from_module)
+          JS.identifier(:system),
+          JS.identifier(:spawn_link)
         )
       ),
       [Translator.translate(module, env), Translator.translate(fun, env), Translator.translate(args, env)]
@@ -166,11 +166,24 @@ defmodule ElixirScript.Translator.Kernel do
       JS.member_expression(
         JS.identifier(:self),
         JS.member_expression(
-          JS.identifier(:scheduler),
+          JS.identifier(:system),
           JS.identifier(:exit)
         )
       ),
       [Translator.translate(reason, env)]
+    )
+  end
+
+  defp do_translate({:send, _, [dest, msg]}, env) do
+    JS.call_expression(
+      JS.member_expression(
+        JS.identifier(:self),
+        JS.member_expression(
+          JS.identifier(:system),
+          JS.identifier(:send)
+        )
+      ),
+      [Translator.translate(dest, env), Translator.translate(msg, env)]
     )
   end
 

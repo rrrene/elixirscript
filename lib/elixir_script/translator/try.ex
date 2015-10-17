@@ -12,7 +12,7 @@ defmodule ElixirScript.Translator.Try do
     else_block = Dict.get(blocks, :else, nil)
 
     translated_body = Function.prepare_function_body(try_block, env) |> JS.block_statement
-    try_block = JS.function_expression([], [], translated_body)
+    try_block = JS.function_expression([], [], translated_body, true)
 
     if rescue_block do
       rescue_block = process_rescue_block(rescue_block, env)
@@ -84,7 +84,7 @@ defmodule ElixirScript.Translator.Try do
 
   defp process_after_block(after_block, env) do
       translated_body = Function.prepare_function_body(after_block, env) |> JS.block_statement
-      JS.function_expression([], [], translated_body)
+      JS.function_expression([], [], translated_body, true)
   end
 
   defp convert_to_struct([module]) do

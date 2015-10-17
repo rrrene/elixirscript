@@ -16,7 +16,7 @@ defmodule ElixirScript.Translator.Function do
       result
     )
 
-    JS.variable_declaration([declarator], :let)
+    JS.variable_declaration([declarator], :const)
   end
 
   def make_anonymous_function(functions, env) do
@@ -92,7 +92,7 @@ defmodule ElixirScript.Translator.Function do
       ),
       [
         JS.array_expression(patterns), 
-        JS.function_expression(params, [], body),
+        JS.function_expression(params, [], body, true),
         JS.function_expression(params, [], guard_body)
       ]
     )
@@ -106,7 +106,7 @@ defmodule ElixirScript.Translator.Function do
       ),
       [
         JS.array_expression(patterns), 
-        JS.function_expression(params, [], body)
+        JS.function_expression(params, [], body, true)
       ]
     )
   end
@@ -131,7 +131,7 @@ defmodule ElixirScript.Translator.Function do
     JS.call_expression(
       JS.member_expression(
         JS.identifier("JS"),
-        JS.identifier("get_property_or_call_function")
+        JS.identifier("call_property")
       ),
       [
         Utils.make_module_expression_tree(the_name, false, env),
@@ -185,12 +185,20 @@ defmodule ElixirScript.Translator.Function do
     |> return_last_expression
   end
 
+  def return_expression(%ESTree.YieldExpression{} = js_ast) do
+    JS.return_statement(js_ast)
+  end
+
+  def return_expression(js_ast) do
+    JS.return_statement(JS.yield_expression(js_ast))
+  end
+
   def return_last_expression(nil) do
     nil
   end
 
   def return_last_expression([]) do
-    [JS.return_statement(JS.literal(nil))]
+    [return_expression(JS.literal(nil))]
   end
 
   def return_last_expression(%ESTree.BlockStatement{} = block) do
@@ -202,21 +210,23 @@ defmodule ElixirScript.Translator.Function do
 
     last_item = case last_item do
       %ESTree.Literal{} ->
-        JS.return_statement(last_item) 
+        return_expression(last_item) 
       %ESTree.Identifier{} ->
-        JS.return_statement(last_item) 
+        return_expression(last_item) 
+      %ESTree.YieldExpression{} ->
+        return_expression(last_item) 
       %ESTree.VariableDeclaration{} ->
         declaration = hd(last_item.declarations).id
 
         return_statement = case declaration do
           %ESTree.ArrayPattern{elements: elements} ->
             if(length(elements) == 1) do
-              JS.return_statement(hd(declaration.elements))
+              return_expression(hd(declaration.elements))
             else
-              JS.return_statement(JS.array_expression(declaration.elements))
+              return_expression(JS.array_expression(declaration.elements))
             end
           _ ->
-            JS.return_statement(declaration)  
+            return_expression(declaration)  
         end
 
         [last_item, return_statement]
@@ -224,9 +234,9 @@ defmodule ElixirScript.Translator.Function do
         last_item = %ESTree.BlockStatement{ last_item | body: return_last_expression(last_item.body) }
       _ ->
         if String.contains?(last_item.type, "Expression") do
-          JS.return_statement(last_item) 
+          return_expression(last_item) 
         else
-          [last_item, JS.return_statement(JS.literal(nil))]
+          [last_item, return_expression(JS.literal(nil))]
         end    
     end
 

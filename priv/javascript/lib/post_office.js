@@ -1,5 +1,5 @@
 /* @flow */
-import Signal from './signals';
+import Patterns from './patterns/patterns';
 
 function update(map: Map, key: Symbol, value: any): Map {
   let m = new Map(map);
@@ -13,85 +13,172 @@ function remove(map: Map, key: Symbol): Map {
   return m;
 }
 
-class MailBox {
-  signal: Signal;
-  messages: Array<any>;
+let process_counter = -1;
 
-  constructor(context: any = this){
-    this.signal = new Signal();
-    this.signal.add((...params) => this.messages = this.messages.concat(params), context);
+class PID {
+  constructor(){
+    process_counter = process_counter + 1;
+    this.id = process_counter;
+  }
+
+  toString(){
+    return "PID#<0." + this.id + ".0>";
+  }
+}
+
+class Mailbox{
+  messages: Array<any>
+
+  constructor(){
     this.messages = [];
   }
 
-  receive(...messages){
-    this.signal.dispatch(...messages);
+  deliver(message: any){
+    this.messages.push(message);
+    return message;
   }
 
-  peek(){
-    if(this.messages.length === 0){
-      return null;
-    }
-
-    return this.messages[0];
+  get(){
+    return this.messages;
   }
 
-  read(){
-    let result = this.messages[0];
-    this.messages = this.messages.slice(1);
-
-    return result;
+  isEmpty(){
+    return this.messages.length === 0;
   }
 
-  add_subscriber(fn: Function, context: any = this){
-    this.signal.add(fn, context);
+  removeAt(index){
+    this.messages.splice(index, 1);
+  }
+}
+
+class Process {
+  pid: PID;
+  mailbox: Mailbox;
+  dictionary: Map;
+
+  constructor(pid: PID, mailbox: Mailbox){
+    this.pid = pid;
+    this.mailbox = mailbox;
+    this.dictionary = new Map();
   }
 
-  remove_subscriber(fn: Function){
-    this.signal.remove(fn);
+  put(key, value){
+    this.dictionary = update(this.dictionary, key, value);
   }
 
-  dispose(){
-    this.signal.dispose();
-    this.messages = null;
+  get(key){
+    return this.dictionary.get(key);
+  }
+
+  erase(key){
+    return this.dictionary = remove(this.dictionary, key);
+  }
+
+  get_keys(){
+    return this.dictionary.keys();
   }
 }
 
 
 class PostOffice {
+  processes: Map;
   mailboxes: Map;
+  names: Map;
 
   constructor(){
+    this.processes = new Map();
     this.mailboxes = new Map();
+    this.names = new Map();
   }
 
-  send(address: Symbol, message: any): void {
-    this.mailboxes.get(address).receive(message);
+  spawn(){
+    let pid = new PID();
+    let mailbox = new Mailbox();
+
+    this.processes = update(this.processes, pid, new Process(pid, mailbox));
+    this.mailboxes = update(this.mailboxes, pid, new Mailbox());
+
+    return pid;
   }
 
-  receive(address: Symbol): any {
-    return this.mailboxes.get(address).read();
+  exit(receiver: any){
+    let pid = this.pidof(receiver);
+    this.unregister(pid);
+
+    this.processes = remove(this.processes, pid);
+    this.mailboxes = remove(this.mailboxes, pid);    
   }
 
-  peek(address: Symbol): any {
-    return this.mailboxes.get(address).peek();
+  register(name, pid){
+    if(!this.names.has(name)){
+      this.names = update(this.names, name, new Set());      
+    }
+
+    this.names.get(name).add(pid);
   }
 
-  add_mailbox(address: Symbol = Symbol(), context: any = this): Symbol {
-    this.mailboxes = update(this.mailboxes, address, new MailBox());
-    return address;
+  registered(name){
+    if(this.names.has(name)){
+      return this.names.get(name).values();
+    }
+
+    return [];
   }
 
-  remove_mailbox(address: Symbol): void {
-    this.mailboxes.get(address).dispose();
-    this.mailboxes = remove(this.mailboxes, address);
+  unregister(pid){
+    for(let name of this.names.keys()){
+      if(this.names.has(name) && this.names.get(name).has(pid)){
+        this.names.get(name).delete(pid);
+      }
+    }
   }
 
-  subscribe(address: Symbol, subscribtion_fn: Function, context: any = this ): void {
-    this.mailboxes.get(address).add_subscriber(subscribtion_fn, context);    
+  pidof(){
+    if (id instanceof PID) {
+       return this.processes.has(id) ? id : null;
+    } else if (id instanceof Process) {
+       return id.pid;
+    } else {
+       let pid = this.registered(id);
+       if (pid === null)
+          throw("Process name not registered: " + id + " (" + typeof(id) + ")");
+       return pid;
+    }
   }
 
-  unsubscribe(address: Symbol, subscribtion_fn: Function): void {
-    this.mailboxes.get(address).remove_subscriber(subscribtion_fn);   
+  send(receiver: any, message: any): void {
+    let pid = this.pidof(receiver);
+    this.mailboxes.get(pid).deliver(message);
+  }
+
+  receive(receiver: any, fun: Function): any {
+    for(let msg of this.mailboxes.get(pid).get()){
+      try{
+        return fun(msg);
+      }catch(e){
+        if(!e instanceof Patterns.MatchError){
+          throw e;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  put(pid, key, value){
+    this.processes.get(this.pidof(pid)).put(key, value);
+  }
+
+  get(pid, key){
+    return this.processes.get(this.pidof(pid)).get(key);
+  }
+
+  erase(pid, key){
+    return this.processes.get(this.pidof(pid)).erase(key);
+  }
+
+  get_keys(pid){
+    return this.processes.get(this.pidof(pid)).get_keys();
   }
 }
 

@@ -31,7 +31,7 @@ defmodule ElixirScript.Translator.List.Test do
     assert_translation(ex_ast, js_code)
 
     ex_ast = quote do: this.list ++ [4, 5, 6]
-    js_code = "JS.get_property_or_call_function(this,'list').concat(Kernel.SpecialForms.list(4,5,6))"
+    js_code = "JS.call_property(this,'list').concat(Kernel.SpecialForms.list(4,5,6))"
 
     assert_translation(ex_ast, js_code)    
   end

@@ -20,13 +20,13 @@ function decode64(data){
   return btoa(data);
 }
 
-function decode64__em__(data){
+function decode64__emark__(data){
   return atob(data);
 }
 
 
-export {
+export default {
   encode64,
   decode64,
-  decode64__em__
+  decode64__emark__
 }

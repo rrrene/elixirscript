@@ -13,7 +13,7 @@ defmodule ElixirScript.Translator.Bug.Test do
 
     js_code = """
      React.createElement(React.Text,Kernel.SpecialForms.map({
-             style: JS.get_property_or_call_function(styles,'welcome')
+             style: JS.call_property(styles,'welcome')
        }),'Welcome to React Native!')
     """
 
@@ -33,7 +33,7 @@ defmodule ElixirScript.Translator.Bug.Test do
      import { default as JQuery } from 'jquery';
      const __MODULE__ = Kernel.SpecialForms.atom('Todo');
      
-     JQuery(JS.get_property_or_call_function(e, 'target'));
+     JQuery(JS.call_property(e, 'target'));
      export {};
     """
 
@@ -46,7 +46,7 @@ defmodule ElixirScript.Translator.Bug.Test do
     end
 
     js_code = """
-      const graphic_store = JS.get_property_or_call_function(App.Stores.GraphicStore, 'create_store');
+      const graphic_store = JS.call_property(App.Stores.GraphicStore, 'create_store');
 
     """
 
@@ -71,7 +71,7 @@ defmodule ElixirScript.Translator.Bug.Test do
     end
 
     js_code = """
-      JS.get_property_or_call_function(this, 'getRawCanvas').getContext('2d')
+      JS.call_property(this, 'getRawCanvas').getContext('2d')
     """
 
     assert_translation(ex_ast, js_code) 

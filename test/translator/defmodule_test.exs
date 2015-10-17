@@ -198,11 +198,11 @@ defmodule ElixirScript.Translator.Defmodule.Test do
     js_code = """
      import * as Tigers from 'lions/tigers';
      const __MODULE__ = Kernel.SpecialForms.atom('Animals');
-     JS.get_property_or_call_function(Tigers,'oh_my');
+     JS.call_property(Tigers,'oh_my');
      export {};
 
      const __MODULE__ = Kernel.SpecialForms.atom('Tigers');
-     JS.get_property_or_call_function(Lions.Tigers.Bears,'oh_my');
+     JS.call_property(Lions.Tigers.Bears,'oh_my');
      export {};
     """
 
@@ -230,14 +230,14 @@ defmodule ElixirScript.Translator.Defmodule.Test do
          let oh_my = Patterns.defmatch(Patterns.make_case([],function()    {
              return     null;
            }));
-         JS.get_property_or_call_function(Lions.Tigers.Bears,'oh_my');
+         JS.call_property(Lions.Tigers.Bears,'oh_my');
          export {
              oh_my
        };
 
          import * as Tigers from 'lions/tigers';
          const __MODULE__ = Kernel.SpecialForms.atom('Animals');
-         JS.get_property_or_call_function(Tigers,'oh_my');
+         JS.call_property(Tigers,'oh_my');
          export {};
     """
 
