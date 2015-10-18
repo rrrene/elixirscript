@@ -1,25 +1,30 @@
 import Kernel from './kernel';
+import JS from './js';
 
 let Enum = {
 
-  all__qmark__: function(collection, fun = (x) => x){
+  all__qmark__: function* (collection, fun = (x) => x){
     for(let elem of collection){
-      if(!fun(elem)){
-        return false;
+      let the_result = yield* JS.run(fun, [elem]);
+
+      if(!the_result){
+        return yield false;
       }
     }
 
-    return true;
+    return yield true;
   },
 
-  any__qmark__: function(collection, fun = (x) => x){
+  any__qmark__: function* (collection, fun = (x) => x){
     for(let elem of collection){
-      if(fun(elem)){
-        return true;
+      let the_result = yield* JS.run(fun, [elem]);
+
+      if(!the_result){
+        return yield true;
       }
     }
 
-    return false;
+    return yield false;
   },
 
   at: function(collection, n, the_default = null){
@@ -34,11 +39,20 @@ let Enum = {
     return enumables[0].concat(enumables[1]);
   },
 
-  count: function(collection, fun = null){
+  count: function* (collection, fun = null){
     if(fun == null){
-      return collection.length;
+      yield collection.length;
     } else {
-      return collection.filter(fun).length;
+      let result = 0;
+
+      for(let elem of collection){
+        let the_result = yield* JS.run(fun, [elem]);
+        if(the_result){
+          result++;
+        }
+      }
+
+      return yield result;
     }
   },
 
@@ -46,23 +60,25 @@ let Enum = {
     return collection.slice(count);
   },
 
-  drop_while: function(collection, fun){
+  drop_while: function* (collection, fun){
     let count = 0;
 
     for(let elem of collection){
-      if(fun(elem)){
+      let the_result = yield* JS.run(fun, [elem]);
+
+      if(the_result){
         count = count + 1;
       }else{
         break;
       }
     }
 
-    return collection.slice(count);
+    return yield collection.slice(count);
   },
 
-  each: function(collection, fun){
+  each: function* (collection, fun){
     for(let elem of collection){
-      fun(elem);
+      yield* JS.run(fun, [elem]);
     }
   },
 
@@ -94,74 +110,77 @@ let Enum = {
     throw new Error("collection is not an Enumerable");
   },
 
-  filter: function(collection, fun){
+  filter: function* (collection, fun){
     let result = [];
 
     for(let elem of collection){
-      if(fun(elem)){
+      let the_result = yield* JS.run(fun, [elem]);
+
+      if(the_result){
         result.push(elem);
       }
     }
 
-    return result;
+    return yield result;
   },
 
-  filter_map: function(collection, filter, mapper){
+  filter_map: function* (collection, filter, mapper){
     return Enum.map(Enum.filter(collection, filter), mapper);
   },
 
-  find: function(collection, if_none = null, fun){
+  find: function* (collection, if_none = null, fun){
     for(let elem of collection){
-      if(fun(elem)){
-        return elem;
+      if(yield* JS.run(fun, [elem])){
+        return yield elem;
       }
     }
 
-    return if_none;
+    return yield if_none;
   },
 
-  into: function(collection, list){
-    return list.concat(collection);
+  into: function* (collection, list){
+    return yield list.concat(collection);
   },
 
-  map: function(collection, fun){
+  map: function*(collection, fun){
     let result = [];
 
     for(let elem of collection){
-      result.push(fun(elem));
+      let the_result = yield* JS.run(fun, [elem]);
+      result.push(the_result);
     }
 
-    return result;
+    return yield result;
   },
 
-  map_reduce: function(collection, acc, fun){
+  map_reduce: function* (collection, acc, fun){
     let mapped = Kernel.SpecialForms.list();
     let the_acc = acc;
 
     for (var i = 0; i < this.count(collection); i++) {
-      let tuple = fun(collection[i], the_acc);
+      let tuple = yield* JS.run(fun, [collection[i], the_acc]);
 
       the_acc = Kernel.elem(tuple, 1);
       mapped = Kernel.SpecialForms.list(...mapped.concat([Kernel.elem(tuple, 0)]));
     }
 
-    return Kernel.SpecialForms.tuple(mapped, the_acc);
+    return yield Kernel.SpecialForms.tuple(mapped, the_acc);
   },
 
   member: function(collection, value){
     return collection.includes(value);
   },
 
-  reduce: function(collection, acc, fun){
+  reduce: function* (collection, acc, fun){
     let the_acc = acc;
 
     for (var i = 0; i < this.count(collection); i++) {
-      let tuple = fun(collection[i], the_acc);
+      let tuple = yield* JS.run(fun, [collection[i], the_acc]);
 
       the_acc = Kernel.elem(tuple, 1);
     }
 
-    return the_acc;
+    return yield the_acc;
   },
 
   take: function(collection, count){
@@ -181,18 +200,18 @@ let Enum = {
     return Kernel.SpecialForms.list(...result);
   },
 
-  take_while: function(collection, fun){
+  take_while: function* (collection, fun){
     let count = 0;
 
     for(let elem of collection){
-      if(fun(elem)){
+      if(yield* JS.run(fun, [elem])){
         count = count + 1;
       }else{
         break;
       }
     }
 
-    return collection.slice(0, count);
+    return yield collection.slice(0, count);
   },
 
   to_list: function(collection){

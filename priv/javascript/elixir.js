@@ -20,3 +20,4 @@ export { default as Base } from './lib/base';
 export { default as String } from './lib/string';
 export { default as Bitwise } from './lib/bitwise';
 export { default as Console } from './lib/console';
+export { default as Application } from './lib/application';

@@ -152,7 +152,7 @@ defmodule ElixirScript.Translator do
     end
   end
 
-  defp do_translate({{:., context, [module_name, function_name]}, _, params } = ast, env) do
+  defp do_translate({{:., _, [module_name, function_name]}, _, params } = ast, env) do
     case module_name do
       Kernel ->
         KernelLib.translate_kernel_function(function_name, params, env)
@@ -286,7 +286,7 @@ defmodule ElixirScript.Translator do
     Module.make_module(module_name_list, body, env)
   end
 
-  defp do_translate({name, metadata, params} = ast, env) when is_list(params) do
+  defp do_translate({name, _, params} = ast, env) when is_list(params) do
     if KernelLib.is_defined_in_kernel(name, length(params)) do
       KernelLib.translate_kernel_function(name, params, env)
     else

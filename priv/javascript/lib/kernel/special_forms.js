@@ -2,6 +2,7 @@ import BitString from '../bit_string';
 import Tuple from '../tuple';
 import Enum from '../enum';
 import * as Patterns from '../patterns/patterns';
+import JS from '../js';
 
 let SpecialForms = {
 
@@ -60,7 +61,7 @@ let SpecialForms = {
     return Object.freeze(Object.assign(obj, values));
   },
 
-  _for: function(collections, fun, filter = () => true, into = [], previousValues = []){
+  _for: function* (collections, fun, filter = () => true, into = [], previousValues = []){
     let pattern = collections[0][0];
     let collection = collections[0][1];
 
@@ -70,54 +71,28 @@ let SpecialForms = {
         let r = Patterns.match_no_throw(pattern, elem);
         let args = previousValues.concat(r);
 
-        if(r && filter.apply(this, args)){
-          into = Enum.into([fun.apply(this, args)], into);
+        let filter_result = yield* JS.run(filter, args, this);
+
+        if(r && filter_result){
+          let fun_result = yield* JS.run(fun, args, this);
+
+          into = yield* Enum.into([fun_result], into);
         }
       }
 
-      return into;
+      return yield into;
     }else{
       let _into = []
 
       for(let elem of collection){
         let r = Patterns.match_no_throw(pattern, elem);
         if(r){
-          _into = Enum.into(this._for(collections.slice(1), fun, filter, _into, previousValues.concat(r)), into);
+          let for_result = yield* JS.run(this._for, [collections.slice(1), fun, filter, _into, previousValues.concat(r)], this)
+          _into = yield* Enum.into(for_result, into);
         }
       }
 
-      return _into;
-    }
-  },
-
-  receive: function(receive_fun, timeout_in_ms = null, timeout_fn = (time) => true){
-    if (timeout_in_ms == null || timeout_in_ms === System.for('infinity')) {
-      while(true){
-        if(self.mailbox.length !== 0){
-          let message = self.mailbox[0];
-          self.mailbox = self.mailbox.slice(1);
-          return receive_fun(message);
-        }
-      }
-    }else if(timeout_in_ms === 0){
-      if(self.mailbox.length !== 0){
-        let message = self.mailbox[0];
-        self.mailbox = self.mailbox.slice(1);
-        return receive_fun(message);
-      }else{
-        return null;
-      }
-    }else{
-      let now = Date.now();
-      while(Date.now() < (now + timeout_in_ms)){
-        if(self.mailbox.length !== 0){
-          let message = self.mailbox[0];
-          self.mailbox = self.mailbox.slice(1);
-          return receive_fun(message);
-        }
-      }
-
-      return timeout_fn(timeout_in_ms);
+      return yield _into;
     }
   },
 
@@ -125,19 +100,18 @@ let SpecialForms = {
     return new Tuple(...args);
   },
 
-
-  _try: function(do_fun, rescue_function, catch_fun, else_function, after_function){
+  _try: function* (do_fun, rescue_function, catch_fun, else_function, after_function){
     let result = null;
 
     try{
-      result = do_fun();
+      result = yield* JS.run(do_fun, []);
     }catch(e){
       let ex_result = null;
 
       if(rescue_function){
         try{
-          ex_result = rescue_function(e);
-          return ex_result;
+          ex_result = yield* JS.run(rescue_function, [e]);
+          return yield ex_result;
         }catch(ex){
           if(ex instanceof Patterns.MatchError){
             throw ex;
@@ -147,8 +121,8 @@ let SpecialForms = {
 
       if(catch_fun){
         try{
-          ex_result = catch_fun(e);
-          return ex_result;             
+          ex_result = yield* JS.run(catch_fun, [e]);
+          return yield ex_result;             
         }catch(ex){
           if(ex instanceof Patterns.MatchError){
             throw ex;
@@ -160,13 +134,13 @@ let SpecialForms = {
 
     }finally{
       if(after_function){
-        after_function();
+        yield* JS.run(after_function, []);
       }
     }
 
     if(else_function){
       try{  
-        return else_function(result);
+        return yield* JS.run(else_function, [result]);
       }catch(ex){
           if(ex instanceof Patterns.MatchError){
             throw new Error("No Match Found in Else");
@@ -175,7 +149,7 @@ let SpecialForms = {
         throw ex;
       }
     }else{
-      return result;
+      return yield result;
     }
   }
 

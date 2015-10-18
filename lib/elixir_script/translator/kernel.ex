@@ -175,6 +175,14 @@ defmodule ElixirScript.Translator.Kernel do
   end
 
   defp do_translate({:send, _, [dest, msg]}, env) do
+    resolve = JS.call_expression(
+        JS.member_expression(
+          JS.identifier(:JS),
+          JS.identifier(:resolve)
+        ),
+      [Translator.translate(msg, env)]
+    )
+
     JS.call_expression(
       JS.member_expression(
         JS.identifier(:self),
@@ -183,7 +191,7 @@ defmodule ElixirScript.Translator.Kernel do
           JS.identifier(:send)
         )
       ),
-      [Translator.translate(dest, env), Translator.translate(msg, env)]
+      [Translator.translate(dest, env), resolve]
     )
   end
 

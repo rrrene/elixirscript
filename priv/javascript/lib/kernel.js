@@ -124,11 +124,20 @@ let Kernel = {
     return !arg;
   },
 
-  apply: function(module, func, args){
-    if(arguments.length === 3){
-      return module[func].apply(null, args);
+  apply: function(...args){
+    if(args.length === 3){
+      let mod = args[0];
+      let func = args[1];
+      let func_args = args[2];
+
+      return mod[func].apply(null, func_args);
+    }else if(args.length === 2){
+      let func = args[0];
+      let func_args = args[1];
+
+      return func.apply(null, func_args);
     }else{
-      return module.apply(null, func);
+      throw new Error("Invalid number of arguments");
     }
   },
 

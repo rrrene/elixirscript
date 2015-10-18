@@ -1,4 +1,5 @@
 import Kernel from './kernel';
+import JS from './js';
 
 let List = {};
 
@@ -60,18 +61,26 @@ List.flatten = function(list, tail = Kernel.SpecialForms.list()){
   return Kernel.SpecialForms.list(...new_value);
 };
 
-List.foldl = function(list, acc, func){
-  return list.reduce(func, acc);
+List.foldl = function* (list, acc, func){
+  yield* JS.run(fun, [elem]);
+
+  let new_acc = acc;
+
+  for (var i = 0; i < list.length; i++) {
+    new_acc = yield* JS.run(func, [list[i], new_acc]);
+  }
+
+  return yield new_acc;
 };
 
-List.foldr = function(list, acc, func){
+List.foldr = function* (list, acc, func){
   let new_acc = acc;
 
   for (var i = list.length - 1; i >= 0; i--) {
-    new_acc = func(list[i], new_acc);
+    new_acc = yield* JS.run(func, [list[i], new_acc]);
   }
 
-  return new_acc;
+  return yield new_acc;
 };
 
 List.insert_at = function(list, index, value){
@@ -207,18 +216,19 @@ List.replace_at = function(list, index, value){
   return Kernel.SpecialForms.list(...new_value);
 };
 
-List.update_at = function(list, index, fun){
+List.update_at = function* (list, index, fun){
   let new_value = [];
 
   for(let i = 0; i < list.count(); i++){
     if(i === index){
-      new_value.push(fun(list.get(i)));
+      let update_value = yield* JS.run(fun, [list[i]]);
+      new_value.push(update_value);
     }else{
-      new_value.push(list.get(i));
+      new_value.push(list[i]);
     }
   }
 
-  return new_value;
+  return yield new_value;
 };
 
 List.wrap = function(list){

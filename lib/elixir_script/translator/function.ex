@@ -7,7 +7,6 @@ defmodule ElixirScript.Translator.Function do
   alias ElixirScript.Preprocess.Variables
   alias ElixirScript.Translator.Map
 
-
   def process_function(name, functions, env) do
     result = make_anonymous_function(functions, env)
 
@@ -159,12 +158,7 @@ defmodule ElixirScript.Translator.Function do
       {{:., _, [{:__aliases__, _, _}]}, _, _} = ast ->
         ast
       name ->
-        case to_string(name) do
-          "Elixir." <> actual_name ->
-            actual_name
-          _ ->
-            name
-        end
+        name
     end
 
     Utils.make_call_expression(the_name, Utils.filter_name(function_name), params, env)
