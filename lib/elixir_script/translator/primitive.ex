@@ -7,11 +7,11 @@ defmodule ElixirScript.Translator.Primitive do
 
   def special_forms() do
     JS.member_expression(
-      JS.identifier("Elixir"),
       JS.member_expression(
-        JS.identifier("Kernel"),
-        JS.identifier("SpecialForms")
-      )
+        JS.identifier("Elixir"),
+        JS.identifier("Kernel")
+      ),
+      JS.identifier("SpecialForms")
     )
   end
 

@@ -87,7 +87,6 @@ defmodule ElixirScript do
   end
 
   defp create_code(include_path, import_standard_libs?) do
-
     state = ElixirScript.State.get()
 
     current = self
@@ -149,7 +148,7 @@ defmodule ElixirScript do
       []
     end
 
-    program = standard_libs_import ++ module.body
+    program = standard_libs_import ++ wrap(module.body)
     |> ESTree.Tools.Builder.program
 
     { file_path, program }
@@ -157,6 +156,18 @@ defmodule ElixirScript do
 
   defp process_module(module, _root, _, _) do
     { "", module }
+  end
+
+  defp wrap([ast]) do
+    if String.ends_with? ast.type, "Expression" do
+      [Builder.expression_statement(ast)]
+    else
+      [ast]
+    end
+  end
+
+  defp wrap(ast) do
+    ast
   end
 
   defp create_file_name(%JSModule{ name: module_list }) do
@@ -180,12 +191,16 @@ defmodule ElixirScript do
 
   @doc false
   def javascript_ast_to_code(js_ast) do
-    prepare_js_ast(js_ast)
-    |> Generator.generate
+    js_ast
+    |> prepare_js_ast
+    |> to_map
+    |> ElixirScript.JSProcess.compile
+    
+    #Generator.generate(js_ast)
   end
 
   defp prepare_js_ast(js_ast) do
-    case js_ast do
+    js_ast = case js_ast do
       modules when is_list(modules) ->
         Enum.reduce(modules, [], fn(x, list) -> list ++ x.body end)
         |> Builder.program
@@ -194,6 +209,37 @@ defmodule ElixirScript do
       _ ->
         js_ast
     end
+  end
+
+  defp to_map(ast) when is_map(ast) do
+    ast = Map.from_struct(ast)
+    keys = Map.keys(ast)
+    ast = Enum.reduce(keys, %{}, fn(x, acc) ->
+      key = Atom.to_string(x)
+      value = to_map(Map.get(ast, x))
+
+      Map.put(acc, key, value)
+    end)
+  end
+
+  defp to_map(ast) when is_list(ast) do
+    Enum.map(ast, &to_map(&1))
+  end
+
+  defp to_map(ast) when is_nil(ast) do
+    nil
+  end
+
+  defp to_map(ast) when is_boolean(ast) do
+    ast
+  end
+
+  defp to_map(ast) when is_atom(ast) do
+    Atom.to_string(ast)
+  end
+
+  defp to_map(ast) do
+    ast
   end
 
   defp operating_path() do

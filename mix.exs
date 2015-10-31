@@ -22,6 +22,7 @@ defmodule ElixirScript.Mixfile do
 
   def application do
     [
+      mod: { ElixirScript.App, [] },
       applications: [:logger, :inflex, :estree]
     ]
   end
@@ -30,6 +31,7 @@ defmodule ElixirScript.Mixfile do
     [
       {:inflex, "~> 1.4" },
       {:estree, "~> 2.0"},
+      {:exos, "~> 1.0"},
       {:shouldi, only: :test },
       {:earmark, "~> 0.1", only: :dev },
       {:ex_doc, "~> 0.10", only: :dev },

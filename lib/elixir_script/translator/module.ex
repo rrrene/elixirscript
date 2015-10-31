@@ -58,6 +58,8 @@ defmodule ElixirScript.Translator.Module do
     private_functions = Enum.map(private_functions, fn({_key, value}) -> value end)
 
     default = JS.export_named_declaration(exported_object)
+    |> JS.expression_statement
+    
     {modules, body} = Enum.partition(body, fn(x) ->
       case x do
         %JSModule{} ->

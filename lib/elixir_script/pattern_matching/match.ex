@@ -7,53 +7,53 @@ defmodule ElixirScript.PatternMatching.Match do
   alias ElixirScript.Translator.Utils
   alias ElixirScript.Translator.Map
 
-  @wildcard JS.member_expression(
-    JS.identifier("Elixir"),
-    JS.member_expression(
-        JS.identifier(:Patterns),
-        JS.identifier(:wildcard)
+  @wildcard       JS.member_expression(
+        JS.member_expression(
+          JS.identifier("Elixir"),
+          JS.identifier("Patterns")
+        ),
+        JS.identifier("wildcard")
       )
-  )
 
   @parameter JS.member_expression(
-    JS.identifier("Elixir"),
-    JS.member_expression(
-        JS.identifier(:Patterns),
-        JS.identifier(:variable)
+        JS.member_expression(
+          JS.identifier("Elixir"),
+          JS.identifier("Patterns")
+        ),
+        JS.identifier("variable")
       )
-  )
 
   @head_tail JS.member_expression(
-    JS.identifier("Elixir"),
-    JS.member_expression(
-        JS.identifier(:Patterns),
-        JS.identifier(:headTail)
+        JS.member_expression(
+          JS.identifier("Elixir"),
+          JS.identifier("Patterns")
+        ),
+        JS.identifier("headTail")
       )
-  )
 
   @starts_with JS.member_expression(
-    JS.identifier("Elixir"),
-    JS.member_expression(
-        JS.identifier(:Patterns),
-        JS.identifier(:startsWith)
+        JS.member_expression(
+          JS.identifier("Elixir"),
+          JS.identifier("Patterns")
+        ),
+        JS.identifier("startsWith")
       )
-  )
 
   @capture JS.member_expression(
-    JS.identifier("Elixir"),
-    JS.member_expression(
-        JS.identifier(:Patterns),
-        JS.identifier(:capture)
+        JS.member_expression(
+          JS.identifier("Elixir"),
+          JS.identifier("Patterns")
+        ),
+        JS.identifier("capture")
       )
-  )
 
   @bound JS.member_expression(
-    JS.identifier("Elixir"),
-    JS.member_expression(
-        JS.identifier(:Patterns),
-        JS.identifier(:bound)
+        JS.member_expression(
+          JS.identifier("Elixir"),
+          JS.identifier("Patterns")
+        ),
+        JS.identifier("bound")
       )
-  )
 
   def wildcard() do
     JS.call_expression(
