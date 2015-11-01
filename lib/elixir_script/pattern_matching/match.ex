@@ -7,7 +7,7 @@ defmodule ElixirScript.PatternMatching.Match do
   alias ElixirScript.Translator.Utils
   alias ElixirScript.Translator.Map
 
-  @wildcard       JS.member_expression(
+  @wildcard JS.member_expression(
         JS.member_expression(
           JS.identifier("Elixir"),
           JS.identifier("Patterns")
@@ -96,7 +96,7 @@ defmodule ElixirScript.PatternMatching.Match do
       [value]
     )
   end
-  
+
   def build_match(params, env) do
     Enum.map(params, &do_build_match(&1, env))
     |> reduce_patterns
@@ -106,7 +106,7 @@ defmodule ElixirScript.PatternMatching.Match do
     { [bound(Translator.translate(value, env))], [nil] }
   end
 
-  defp do_build_match({:_, _, _}, env) do
+  defp do_build_match({:_, _, _}, _) do
     { [wildcard()], [JS.identifier(:undefined)] }
   end
 
@@ -165,10 +165,10 @@ defmodule ElixirScript.PatternMatching.Match do
     |> Enum.map(&build_match([&1], env))
     |> reduce_patterns
 
-    {[Primitive.make_tuple_no_translate(patterns)], params}   
+    {[Primitive.make_tuple_no_translate(patterns)], params}
   end
 
-  defp do_build_match({name, _, _}, env) do
+  defp do_build_match({name, _, _}, _) do
     name = Utils.filter_name(name)
     { [parameter()], [JS.identifier(name)] }
   end
